@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Batch Countdown Timer — NestJS</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #ffd700 0%, #ffcc00 50%, #ffb300 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      text-align: center;
+      background: rgba(0, 0, 0, 0.55);
+      border-radius: 20px;
+      padding: 40px 60px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+    }
+
+    .batch-info {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #e0e0e0;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .batch-info .batch-name {
+      color: #ffd700;
+      font-size: 1.8rem;
+    }
+
+    .batch-info .batch-time {
+      color: #aaa;
+      font-size: 1.1rem;
+      font-weight: 400;
+      letter-spacing: 1px;
+    }
+
+    .phase-label {
+      color: #ffd700;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      margin-bottom: 24px;
+    }
+
+    .countdown {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .time-unit {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.55);
+      border: 3px solid #000;
+      box-shadow: 0 0 18px rgba(0, 0, 0, 0.6);
+      border-radius: 12px;
+      padding: 20px 30px;
+      min-width: 100px;
+      transition: transform 0.1s ease, background 0.1s ease;
+    }
+
+    .time-unit.tick {
+      transform: scale(1.05);
+      background: rgba(255, 215, 0, 0.25);
+    }
+
+    .value {
+      font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', monospace;
+      font-size: 4rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1;
+      text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+    }
+
+    .label {
+      font-size: 0.75rem;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-top: 8px;
+      font-weight: 500;
+    }
+
+    .separator {
+      font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', monospace;
+      font-size: 4rem;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.3);
+      animation: blink 1s ease-in-out infinite;
+      line-height: 1;
+      margin: 0 5px;
+    }
+
+    .status {
+      margin-top: 24px;
+      font-size: 0.75rem;
+      color: #666;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 1; }
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 30px 20px;
+      }
+
+      .value,
+      .separator {
+        font-size: 2.5rem;
+      }
+
+      .time-unit {
+        min-width: 70px;
+        padding: 15px 20px;
+      }
+
+      .batch-info {
+        font-size: 1.2rem;
+      }
+
+      .batch-info .batch-name {
+        font-size: 1.4rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="batch-info" class="batch-info">
+      <span class="batch-name">Batch 1</span>
+      <span class="batch-time">9:00 AM – 12:00 PM</span>
+    </div>
+    <div id="phase-label" class="phase-label">Ends In</div>
+    <div id="countdown" class="countdown">
+      <div class="time-unit">
+        <span id="hours" class="value">00</span>
+        <span class="label">Hours</span>
+      </div>
+      <div class="separator">:</div>
+      <div class="time-unit">
+        <span id="minutes" class="value">00</span>
+        <span class="label">Minutes</span>
+      </div>
+      <div class="separator">:</div>
+      <div class="time-unit">
+        <span id="seconds" class="value">00</span>
+        <span class="label">Seconds</span>
+      </div>
+    </div>
+    <div id="status" class="status">Connecting...</div>
+  </div>
+
+  <script>
+    const BATCHES = [
+      { id: 1, name: 'Batch 1', start: 9, end: 12 },
+      { id: 2, name: 'Batch 2', start: 12, end: 15 },
+      { id: 3, name: 'Batch 3', start: 15, end: 18 },
+      { id: 4, name: 'Batch 4', start: 18, end: 21 }
+    ];
+
+    let state = null;
+    let lastSecond = -1;
+    let refreshing = false;
+
+    const hoursEl = document.getElementById('hours');
+    const minutesEl = document.getElementById('minutes');
+    const secondsEl = document.getElementById('seconds');
+    const batchInfoEl = document.getElementById('batch-info');
+    const phaseLabelEl = document.getElementById('phase-label');
+    const statusEl = document.getElementById('status');
+
+    function formatHour(h) {
+      const period = h >= 12 ? 'PM' : 'AM';
+      const hour = h % 12 === 0 ? 12 : h % 12;
+      return hour + ':00 ' + period;
+    }
+
+    function computeLocal() {
+      const now = new Date();
+      const hour = now.getHours();
+      let batch = BATCHES.find(function (b) { return hour >= b.start && hour < b.end; });
+      let phase = 'running';
+      let isNextDay = false;
+      if (!batch) {
+        batch = BATCHES[0];
+        phase = 'upcoming';
+        if (hour >= 21) isNextDay = true;
+      }
+      const start = new Date(now);
+      start.setHours(batch.start, 0, 0, 0);
+      if (phase === 'upcoming' && start <= now) start.setDate(start.getDate() + 1);
+      const end = new Date(start);
+      end.setHours(batch.end, 0, 0, 0);
+      const target = phase === 'running' ? end : start;
+      return { batch: batch, phase: phase, isNextDay: isNextDay, start: start, end: end, target: target };
+    }
+
+    function applyStatus(data) {
+      state = {
+        batch: data.batch,
+        phase: data.phase,
+        isNextDay: data.isNextDay,
+        start: new Date(data.startISO),
+        end: new Date(data.endISO),
+        target: new Date(data.targetISO)
+      };
+    }
+
+    async function fetchStatus() {
+      if (refreshing) return;
+      refreshing = true;
+      try {
+        const res = await fetch('/api/time', { cache: 'no-store' });
+        if (!res.ok) throw new Error('bad status');
+        applyStatus(await res.json());
+        statusEl.textContent = 'Live - NestJS API';
+      } catch (e) {
+        state = computeLocal();
+        statusEl.textContent = 'Offline mode - local clock';
+      } finally {
+        refreshing = false;
+      }
+      render();
+    }
+
+    function render() {
+      if (!state) state = computeLocal();
+
+      let remaining = state.target.getTime() - Date.now();
+      if (remaining <= 0) {
+        remaining = 0;
+        fetchStatus();
+      }
+
+      const total = Math.max(0, Math.floor(remaining / 1000));
+      const h = String(Math.floor(total / 3600)).padStart(2, '0');
+      const m = String(Math.floor((total % 3600) / 60)).padStart(2, '0');
+      const s = String(total % 60).padStart(2, '0');
+
+      hoursEl.textContent = h;
+      minutesEl.textContent = m;
+      secondsEl.textContent = s;
+
+      if (s !== lastSecond) {
+        [hoursEl, minutesEl, secondsEl].forEach(function (el) {
+          el.parentElement.classList.add('tick');
+          setTimeout(function () { el.parentElement.classList.remove('tick'); }, 100);
+        });
+        lastSecond = s;
+      }
+
+      phaseLabelEl.textContent = state.phase === 'running' ? 'Ends In' : 'Starts In';
+      batchInfoEl.innerHTML =
+        '<span class="batch-name">' + state.batch.name + '</span> ' +
+        '<span class="batch-time">' +
+        formatHour(state.batch.start) + ' &ndash; ' + formatHour(state.batch.end) +
+        (state.isNextDay ? ' (Tomorrow)' : '') +
+        '</span>';
+    }
+
+    setInterval(fetchStatus, 1000);
+    setInterval(render, 250);
+    fetchStatus();
+  </script>
+</body>
+</html>
