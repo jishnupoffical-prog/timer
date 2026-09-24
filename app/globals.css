@@ -1,0 +1,146 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: linear-gradient(135deg, #ffd700 0%, #ffcc00 50%, #ffb300 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.container {
+  text-align: center;
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: 20px;
+  padding: 40px 60px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+}
+
+.batch-info {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #e0e0e0;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.batch-info .batch-name {
+  color: #ffd700;
+  font-size: 1.8rem;
+}
+
+.batch-info .batch-time {
+  color: #aaa;
+  font-size: 1.1rem;
+  font-weight: 400;
+  letter-spacing: 1px;
+}
+
+.phase-label {
+  color: #ffd700;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 3px;
+  margin-bottom: 24px;
+}
+
+.countdown {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.time-unit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.55);
+  border: 3px solid #000;
+  box-shadow: 0 0 18px rgba(0, 0, 0, 0.6);
+  border-radius: 12px;
+  padding: 20px 30px;
+  min-width: 100px;
+  transition: transform 0.1s ease, background 0.1s ease;
+}
+
+.time-unit.tick {
+  transform: scale(1.05);
+  background: rgba(255, 215, 0, 0.25);
+}
+
+.value {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', monospace;
+  font-size: 4rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+  text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+}
+
+.label {
+  font-size: 0.75rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-top: 8px;
+  font-weight: 500;
+}
+
+.separator {
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Mono', monospace;
+  font-size: 4rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.3);
+  animation: blink 1s ease-in-out infinite;
+  line-height: 1;
+  margin: 0 5px;
+}
+
+.status {
+  margin-top: 24px;
+  font-size: 0.75rem;
+  color: #666;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: 30px 20px;
+  }
+
+  .value,
+  .separator {
+    font-size: 2.5rem;
+  }
+
+  .time-unit {
+    min-width: 70px;
+    padding: 15px 20px;
+  }
+
+  .batch-info {
+    font-size: 1.2rem;
+  }
+
+  .batch-info .batch-name {
+    font-size: 1.4rem;
+  }
+}
